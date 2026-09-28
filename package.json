@@ -1,0 +1,9 @@
+{
+  "name": "emergency-landing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Emergency Landing – a Boeing 747 maths game for the classroom. Open index.html in a browser; no build step.",
+  "scripts": {
+    "test": "node tests/questions.test.js"
+  }
+}

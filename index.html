@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Emergency Landing</title>
+  <meta name="description" content="A Boeing 747 maths game: solve maths questions to handle emergencies and land the plane safely.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="start">
+  <main id="app">
+
+    <!-- ===================== START ===================== -->
+    <section id="screen-start" class="screen active" aria-labelledby="game-title">
+      <div class="card start-card">
+        <canvas id="title-art" class="title-art" aria-hidden="true"></canvas>
+        <h1 id="game-title">Emergency Landing</h1>
+        <p class="tagline">A Boeing 747 maths rescue</p>
+        <p class="pitch">Boeing 747. You're in the cockpit. Dodge the birds, put out the engine fire, save the passengers falling out, and land the plane. You'll need maths to do it. Come on down to the 747!</p>
+
+        <button id="btn-start" class="btn btn-primary btn-big" type="button">🛫 Take off!</button>
+        <p id="settings-summary" class="summary"></p>
+        <p id="best-score" class="best"></p>
+
+        <details class="panel-details">
+          <summary>How to play</summary>
+          <ul class="howto">
+            <li>Each emergency is solved with maths. <strong>Right answers</strong> keep the plane flying and passengers on board.</li>
+            <li>Tap an answer, or press <kbd>1</kbd>–<kbd>4</kbd>. For birds you can also use the <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> arrow keys.</li>
+            <li>For typed answers, use the keypad or your keyboard, then <kbd>Enter</kbd>.</li>
+            <li>Wrong? No problem – you'll see the right answer and a quick tip.</li>
+            <li>Press <kbd>P</kbd> or the ⏸ button to pause.</li>
+            <li>Land with as many passengers as you can. Don't hit the control tower!</li>
+          </ul>
+        </details>
+
+        <details class="panel-details teacher">
+          <summary>👩‍🏫 Teacher settings</summary>
+          <form id="settings-form" class="settings" onsubmit="return false">
+            <fieldset>
+              <legend>Maths topic</legend>
+              <div id="topic-options" class="options"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Difficulty</legend>
+              <div class="options">
+                <label class="opt"><input type="radio" name="difficulty" value="cadet"> <span><strong>Cadet</strong><small>Gentler numbers – around progression step 2.</small></span></label>
+                <label class="opt"><input type="radio" name="difficulty" value="pilot"> <span><strong>Pilot</strong><small>Middle – around progression step 3.</small></span></label>
+                <label class="opt"><input type="radio" name="difficulty" value="captain"> <span><strong>Captain</strong><small>Harder – progression step 3 into 4.</small></span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Answers</legend>
+              <div class="options">
+                <label class="opt"><input type="radio" name="answerStyle" value="auto"> <span><strong>Multiple choice, typed when hard</strong><small>The hardest questions (including the landing on higher levels) are typed.</small></span></label>
+                <label class="opt"><input type="radio" name="answerStyle" value="choice"> <span><strong>Always multiple choice</strong></span></label>
+                <label class="opt"><input type="radio" name="answerStyle" value="typed"> <span><strong>Always typed</strong></span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Timer</legend>
+              <div class="options">
+                <label class="opt"><input type="radio" name="timer" value="normal"> <span><strong>Normal</strong><small>15–35 seconds a question, depending on difficulty.</small></span></label>
+                <label class="opt"><input type="radio" name="timer" value="relaxed"> <span><strong>Relaxed</strong><small>Double time.</small></span></label>
+                <label class="opt"><input type="radio" name="timer" value="off"> <span><strong>No timer</strong><small>For pupils who find timed maths stressful.</small></span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Flight length</legend>
+              <div class="options">
+                <label class="opt"><input type="radio" name="length" value="5"> <span><strong>Short</strong><small>3 emergencies, then landing (around 18 questions).</small></span></label>
+                <label class="opt"><input type="radio" name="length" value="6"> <span><strong>Normal</strong><small>4 emergencies, then landing (around 22 questions).</small></span></label>
+                <label class="opt"><input type="radio" name="length" value="8"> <span><strong>Long</strong><small>6 emergencies, then landing (around 28 questions).</small></span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Sound &amp; captions</legend>
+              <div class="options">
+                <label class="opt"><input type="checkbox" name="sound"> <span><strong>Sound effects</strong></span></label>
+                <label class="opt"><input type="checkbox" name="captions"> <span><strong>Captions for sounds</strong><small>Shows text for alarms and sound effects.</small></span></label>
+              </div>
+            </fieldset>
+            <button id="btn-reset-settings" type="button" class="btn btn-ghost">Reset to defaults</button>
+            <p class="privacy">Nothing personal is saved. Only these settings and a best score are kept, on this device.</p>
+          </form>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================== GAME ===================== -->
+    <section id="screen-game" class="screen" aria-label="Cockpit">
+      <div class="windscreen">
+        <canvas id="scene" aria-hidden="true"></canvas>
+        <div class="hud">
+          <div class="hud-left">
+            <span id="hud-score" class="pill">⭐ 0</span>
+            <span id="hud-streak" class="pill pill-streak" hidden></span>
+          </div>
+          <div class="hud-right">
+            <button id="btn-sound" class="pill pill-btn" type="button" aria-label="Sound on">🔊</button>
+            <button id="btn-pause" class="pill pill-btn" type="button">⏸ Pause</button>
+          </div>
+        </div>
+        <div id="alert-banner" class="alert-banner" role="alert" hidden></div>
+        <div id="captions" class="captions" aria-live="polite"></div>
+        <div id="challenge" class="challenge" hidden></div>
+      </div>
+      <div id="dashboard" class="dashboard" role="region" aria-label="Instrument panel"></div>
+
+      <div id="pause-overlay" class="overlay" hidden>
+        <div class="card pause-card" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+          <h2 id="pause-title">⏸ Paused</h2>
+          <p>The clock is stopped. Take a breather!</p>
+          <div class="actions">
+            <button id="btn-resume" class="btn btn-primary" type="button">▶ Keep flying</button>
+            <button id="btn-quit" class="btn btn-ghost" type="button">Quit to menu</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTS ===================== -->
+    <section id="screen-results" class="screen" aria-labelledby="ending-title">
+      <div class="card results-card">
+        <canvas id="ending-art" class="ending-art" role="img" aria-label="Cartoon of how the flight ended"></canvas>
+        <h2 id="ending-title" tabindex="-1"></h2>
+        <p id="ending-stars" class="stars"></p>
+        <p id="ending-text" class="ending-text"></p>
+        <dl id="stats" class="stats"></dl>
+        <details class="panel-details review" open>
+          <summary>Questions to look at again <span id="review-count"></span></summary>
+          <ul id="review-list" class="review-list"></ul>
+        </details>
+        <div class="actions">
+          <button id="btn-again" class="btn btn-primary btn-big" type="button">🛫 Fly again</button>
+          <button id="btn-menu" class="btn btn-ghost" type="button">Main menu</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- core -->
+  <script src="js/core/util.js"></script>
+  <script src="js/core/clock.js"></script>
+  <!-- maths engine + topics -->
+  <script src="js/questions/engine.js"></script>
+  <script src="js/questions/topics/addsub.js"></script>
+  <script src="js/questions/topics/times.js"></script>
+  <script src="js/questions/topics/placevalue.js"></script>
+  <script src="js/questions/topics/fractions.js"></script>
+  <script src="js/questions/topics/mixed.js"></script>
+  <!-- ui -->
+  <script src="js/ui/audio.js"></script>
+  <script src="js/ui/art.js"></script>
+  <script src="js/ui/scene.js"></script>
+  <script src="js/ui/dashboard.js"></script>
+  <script src="js/ui/challenge.js"></script>
+  <script src="js/ui/screens.js"></script>
+  <!-- emergencies -->
+  <script src="js/events/registry.js"></script>
+  <script src="js/events/birdStrike.js"></script>
+  <script src="js/events/engineFire.js"></script>
+  <script src="js/events/decompression.js"></script>
+  <script src="js/events/passengers.js"></script>
+  <script src="js/events/weightBalance.js"></script>
+  <script src="js/events/landingSpot.js"></script>
+  <script src="js/events/finalLanding.js"></script>
+  <!-- game -->
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
